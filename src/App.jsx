@@ -1,8 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Board from "./components/Board";
 import LetterPool from "./components/LetterPool";
 import GameEndModal from "./components/GameEndModal";
-import { calculateScore, findWordsOnBoard } from "./utils/calculateScore";
+
+const fakeBackendData = {
+  date: "2024-12-31",
+  board: Array(64).fill(null).map((_, i) => ({
+    letter: i === 3 ? "S" : i === 10 ? "T" : i === 19 ? "A" : null,
+    bonus: i === 5 ? "Mystery" : i === 15 ? "Bomb" : null,
+  })),
+  extraLetters: [
+    { letter: "A" },
+    { letter: "R" },
+    { letter: "E" },
+    { letter: "T" },
+    { letter: "S" },
+    { letter: "L" },
+    { letter: "N" },
+    { letter: "O" },
+  ],
+};
 
 const letterScores = {
   A: 1, B: 3, C: 3, D: 2, E: 1, F: 4, G: 2,
@@ -11,89 +28,29 @@ const letterScores = {
   V: 4, W: 4, X: 8, Y: 4, Z: 10,
 };
 
-const prePlacedTiles = [
-  { position: 3, letter: "S" },
-  { position: 10, letter: "T" },
-  { position: 19, letter: "A" },
-  { position: 35, letter: "R" },
-  { position: 55, letter: "E" },
-];
-
-const generateBoard = () => {
-  const board = Array.from({ length: 64 }, (_, i) => ({
-    letter: null,
-    points: null,
-    bonus:
-      i === 5
-        ? "Mystery"
-        : i === 15
-        ? "Bomb"
-        : i === 31
-        ? "Lose 5"
-        : i === 47
-        ? "Add Unused"
-        : null,
-  }));
-
-  prePlacedTiles.forEach((tile) => {
-    board[tile.position].letter = tile.letter;
-    board[tile.position].points = letterScores[tile.letter];
-  });
-
-  return board;
-};
-
-
-
 const App = () => {
-  const [board, setBoard] = useState(generateBoard());
-  const [isGameOver, setIsGameOver] = useState(true);
-  const [letters, setLetters] = useState([
-    { letter: "A", points: 1, used: false },
-    { letter: "R", points: 1, used: false },
-    { letter: "E", points: 1, used: false },
-    { letter: "T", points: 1, used: false },
-    { letter: "S", points: 1, used: false },
-    { letter: "L", points: 1, used: false },
-    { letter: "N", points: 1, used: false },
-    { letter: "O", points: 1, used: false },
-  ]);
+  const [board, setBoard] = useState([]);
+  const [letters, setLetters] = useState([]);
+  const [isGameOver, setIsGameOver] = useState(false);
 
-  const stats = {
-    words: 10,
-    points: 120,
-    bonus: 20,
-  };
+  useEffect(() => {
+    // Simulate backend fetch
+    const fetchData = async () => {
+      const data = fakeBackendData; // Replace with actual fetch call
+      const populatedBoard = data.board.map((tile) => ({
+        ...tile,
+        points: tile.letter ? letterScores[tile.letter] : null, // Calculate points on the frontend
+      }));
+      setBoard(populatedBoard);
+      setLetters(data.extraLetters.map((l) => ({ ...l, points: letterScores[l.letter], used: false })));
+    };
 
-  const handleSubmit = () => {
-    const { words, score } = findWordsOnBoard(board);
-    const unusedLetters = letters.filter((l) => !l.used).length;
-    let totalScore = score - unusedLetters * 2; // Deduct 2 points for each unused letter.
+    fetchData();
+  }, []);
 
-    board.forEach((tile) => {
-      if (tile.letter && tile.bonus === "Lose 5") {
-        totalScore -= 5;
-      }
-      if (tile.letter && tile.bonus === "Add Unused") {
-        totalScore += unusedLetters;
-      }
-    });
-
-    if (words.length === 0) {
-      console.error("Invalid placement: No valid words formed.");
-    } else {
-      console.log("Words formed:", words);
-      console.log("Score:", totalScore);
-    }
-  };
-
-  const handleGameEnd = () => {
-    setIsGameOver(true);
-  };
-  
   const handlePlayAgain = () => {
     setIsGameOver(false);
-    // Reset the game state here
+    // Reset state as needed
   };
 
   return (
@@ -102,7 +59,7 @@ const App = () => {
       <Board board={board} setBoard={setBoard} letters={letters} setLetters={setLetters} />
       <LetterPool letters={letters} setLetters={setLetters} />
       <button
-        onClick={handleSubmit}
+        onClick={() => console.log("Submit Words")}
         style={{
           padding: "10px 20px",
           backgroundColor: "#4ade80",
@@ -115,11 +72,10 @@ const App = () => {
       >
         Submit Words
       </button>
-
       <GameEndModal
         isOpen={isGameOver}
         onClose={handlePlayAgain}
-        stats={stats}
+        stats={{ words: 0, points: 0, bonus: 0 }}
         board={board}
       />
     </div>
