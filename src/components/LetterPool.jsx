@@ -1,71 +1,39 @@
 import React from "react";
 import styled from "@emotion/styled";
 
+// Styled container for the letter pool
 const PoolContainer = styled.div`
   display: flex;
   justify-content: center;
   margin: 20px 0;
 `;
 
+// Styled component for each letter tile
 const LetterTile = styled.div`
   width: 50px;
   height: 50px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   font-size: 1.2rem;
   font-weight: bold;
-  color: ${({ used }) => (used ? "#9ca3af" : "#374151")};
-  background-color: ${({ used }) => (used ? "#e5e7eb" : "#fef3c7")};
-  border: 2px solid #d1d5db;
+  border: 1px solid #d1d5db;
   border-radius: 5px;
-  margin: 0 5px;
+  background-color: ${({ used }) => (used ? "#e5e7eb" : "#fef3c7")};
+  color: ${({ used }) => (used ? "#9ca3af" : "#374151")};
   cursor: ${({ used }) => (used ? "not-allowed" : "grab")};
+  margin: 0 5px;
 `;
 
-const Points = styled.span`
-  font-size: 0.8rem;
-  font-weight: normal;
-  color: #9ca3af;
-`;
-
-const LetterPool = ({ letters, setLetters, setBoard }) => {
+const LetterPool = ({ letters, setLetters }) => {
+  // Handle drag start event
   const handleDragStart = (e, letter) => {
-    console.log(`Drag started from pool: letter=${letter}`);
-    e.dataTransfer.setData("letter", letter);
-    e.dataTransfer.setData("source", "pool");
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-
-    const letter = e.dataTransfer.getData("letter");
-    const source = e.dataTransfer.getData("source");
-    console.log(`Drop on pool: letter=${letter}, source=${source}`);
-
-    if (source !== "pool") {
-      const sourceIndex = parseInt(source, 10);
-
-      console.log(`Moving letter ${letter} from board position ${sourceIndex} to pool`);
-      setLetters((prev) =>
-        prev.map((l) => (l.letter === letter ? { ...l, used: false } : l))
-      );
-
-      setBoard((prev) =>
-        prev.map((tile, i) =>
-          i === sourceIndex ? { ...tile, letter: null, points: null } : tile
-        )
-      );
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
+    console.log(`Drag started: letter=${letter}`);
+    e.dataTransfer.setData("letter", letter); // Store the dragged letter
   };
 
   return (
-    <PoolContainer onDragOver={handleDragOver} onDrop={handleDrop}>
+    <PoolContainer>
       {letters.map((letterObj, index) => (
         <LetterTile
           key={index}
@@ -74,7 +42,6 @@ const LetterPool = ({ letters, setLetters, setBoard }) => {
           onDragStart={(e) => !letterObj.used && handleDragStart(e, letterObj.letter)}
         >
           {letterObj.letter}
-          <Points>{letterObj.points}</Points>
         </LetterTile>
       ))}
     </PoolContainer>

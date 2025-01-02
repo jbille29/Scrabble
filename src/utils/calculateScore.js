@@ -27,25 +27,30 @@ const letterScores = {
   Z: 10,
 };
 
-export const calculateScore = (board) => {
-  let score = 0;
+// calculateScore.js
+export function calculateScore(board, letters) {
+  let totalPoints = 0;
+  let unusedLetters = letters.filter((l) => !l.used).length;
+
   board.forEach((tile) => {
     if (tile.letter) {
-      let letterScore = tile.points || 0;
-      if (tile.bonus === "DLS") letterScore *= 2;
-      if (tile.bonus === "TLS") letterScore *= 3;
-      score += letterScore;
+      const letterScore = tile.points || 0;
+      totalPoints += letterScore;
+
+      // Add bonus points if applicable
+      if (tile.bonus === "Mystery") {
+        totalPoints += 10; // Example bonus
+      } else if (tile.bonus === "Bomb") {
+        totalPoints -= 5; // Deduction for bomb tiles
+      }
     }
   });
 
-  board.forEach((tile) => {
-    if (tile.bonus === "DWS" && tile.letter) {
-      score *= 2;
-    }
-  });
+  // Deduct points for unused letters
+  totalPoints -= unusedLetters * 2;
 
-  return score;
-};
+  return { totalPoints, unusedLetters };
+}
 
 export const findWordsOnBoard = (board) => {
   // Example logic to detect words (horizontal and vertical)
